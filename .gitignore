@@ -1,2 +1,5 @@
 .venv/
 .idea/
+tmp/
+.python-version/
+__pycache__
