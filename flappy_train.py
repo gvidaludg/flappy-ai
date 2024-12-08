@@ -7,9 +7,10 @@ import model
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
-SPEED = 20
-GRAVITY = 2.5
-GAME_SPEED = 15
+GAME_SPEED = 10
+PIPE_SPEED = GAME_SPEED * 2
+SPEED = 40 * GAME_SPEED / 15
+GRAVITY = 5 * GAME_SPEED / 15
 
 GROUND_WIDHT = 2 * SCREEN_WIDTH
 GROUND_HEIGHT = 100
@@ -82,7 +83,7 @@ class Pipe(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self):
-        self.rect[0] -= GAME_SPEED
+        self.rect[0] -= PIPE_SPEED
 
 
 class Ground(pygame.sprite.Sprite):
@@ -99,7 +100,7 @@ class Ground(pygame.sprite.Sprite):
         self.rect[1] = SCREEN_HEIGHT - GROUND_HEIGHT
 
     def update(self):
-        self.rect[0] -= GAME_SPEED
+        self.rect[0] -= PIPE_SPEED
 
 
 def is_off_screen(sprite):
@@ -143,7 +144,7 @@ begin = True
 
 while begin:
 
-    clock.tick(15)
+    clock.tick(GAME_SPEED)
 
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -173,14 +174,16 @@ while begin:
     pygame.display.update()
 
 
-TOTAL_FRAMES = 20
 DECISION_FRAMES = 4
+MAX_SAME_COUNT = 2
 previous_frames = []
-start_time = pygame.time.get_ticks()
+
+last_jumped = True
+same_count = 0
 
 while True:
 
-    clock.tick(15)
+    clock.tick(GAME_SPEED)
 
     jumped = False
 
@@ -225,11 +228,15 @@ while True:
     img = filtering.from_buffer(img_bytes, SCREEN_WIDTH, SCREEN_HEIGHT)
     #edge = filtering.edge_detection(img)
     previous_frames.append(img)
-    if (len(previous_frames) > TOTAL_FRAMES):
-        previous_frames.pop()
+    if (len(previous_frames) > DECISION_FRAMES):
+        previous_frames.pop(0)
 
-    if (len(previous_frames) == TOTAL_FRAMES):
-        model.pour([previous_frames[-i * TOTAL_FRAMES // DECISION_FRAMES] for i in range(DECISION_FRAMES)], jumped)
+    same_count += 1
+
+    if (len(previous_frames) == DECISION_FRAMES and jumped != last_jumped):
+        model.pour(previous_frames, jumped)
+        last_jumped = jumped
+        same_count = 0
 
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
@@ -239,6 +246,5 @@ while True:
         break
 
 
-model.remove_last(10)
 model.train()
 model.save()

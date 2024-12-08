@@ -3,3 +3,4 @@
 tmp/
 .python-version/
 __pycache__
+*model

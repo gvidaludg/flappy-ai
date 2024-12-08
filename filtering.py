@@ -10,7 +10,6 @@ blur_kernel = (1 / 256.0) * np.array([
     [1, 4, 6, 4, 1]
 ])
 
-
 edge_kernel = np.array([
     [-1, -1, -1],
     [-1, +8, -1],
